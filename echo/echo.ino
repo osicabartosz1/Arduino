@@ -1,27 +1,19 @@
-#define BAUD_RATE 9600
 
-// Setup, initialize 
-void setup() 
-{
-  Serial.begin(BAUD_RATE);  
-
-  // Initialize digital pin LED_BUILTIN as an output.
-  pinMode(LED_BUILTIN, OUTPUT);
+void setup() {
+  Serial.begin(9600); // opens serial port, sets data rate to 9600 bps
 }
 
-// Loop forever
-void loop() 
-{
-  // Serial data is pending
-  if (Serial.available()) 
-  { 
-    // Turn built in LED on
+void loop() {
+  // send data only when you receive data:
+  if (Serial.available() > 0) {
     digitalWrite(LED_BUILTIN, HIGH); 
 
-    // Echo serial data on serial device
-    Serial.write( Serial.read() );
+    // read the incoming byte:
 
-  // Turn built in LED off
+    // say what you got:
+    Serial.print("I received: ");
+    Serial.print(Serial.readString());
     digitalWrite(LED_BUILTIN, LOW); 
-  }  
+
+  }
 }
