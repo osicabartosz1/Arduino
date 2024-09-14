@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Three.js Tetris Cube</title>
+    <style> * {margin: 0;padding: 0;}</style>
+    <script type="importmap">
+        {
+            "imports": {
+                "three": "https://unpkg.com/three@0.138.0/build/three.module.js",
+                "OrbitControls": "https://unpkg.com/three@0.138.0/examples/jsm/controls/OrbitControls.js"
+            }
+        }
+    </script>
+    <script type="module" >
+        import * as THREE from 'https://unpkg.com/three/build/three.module.js';
+        import { OrbitControls } from 'https://unpkg.com/three/examples/jsm/controls/OrbitControls.js';
+
+        var scene, camera, renderer, controls, board;
+        var rawXML, xmlDoc;
+        var children_to_remove = [];
+        var numberOfBricks = 0;
+        var colorChange;
+
+        function init() {
+            scene = new THREE.Scene();
+            scene.background = new THREE.Color( 0x999999 );
+            addGrid();
+
+            camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+            camera.position.y = 3;
+            camera.position.z = 9;
+
+            renderer = new THREE.WebGLRenderer();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+
+            document.body.appendChild(renderer.domElement);
+
+            addEmptyBoard();
+            if(rawXML != null) AddingBrick(0);
+
+            controls = new OrbitControls(camera, renderer.domElement);
+            controls.target.set(0, 0, 0);
+            controls.enablePan = false;
+            controls.enableDamping = true;
+
+            window.requestAnimationFrame(animate);
+        }
+
+        function animate() {
+            controls.update();
+            try {
+                document.getElementsByTagName("h1").item(0).innerText="Number of elements = " + scene.children[1].children.length.toString();
+            } catch (error) {
+                console.error(error);
+            }
+            renderer.render(scene, camera);
+            window.requestAnimationFrame(animate);
+        }
+
+        function onWindowResize() {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize( window.innerWidth, window.innerHeight );
+        }
+
+        function AddingBrick(name){
+            let cube;
+            var brick = new THREE.Group();
+            colorChange = getRandomArbitrary(0.6, 1);
+            brick.name=name;
+            var color = xmlDoc.getElementsByTagName("Brick")[parseInt(name)].getElementsByTagName("color")[0];
+            var blocks = xmlDoc.getElementsByTagName("Brick")[parseInt(name)].getElementsByTagName("Block");
+            for (let block of blocks) {
+                cube = new THREE.BoxGeometry(1, 1, 1);
+                var Material = new THREE.MeshPhongMaterial({color: parseInt(colorNodeToHex(color), 16)});
+                cube = new THREE.Mesh(cube, Material);
+                cube.name = name.toString();
+                cube.position.set(
+                    block.getElementsByTagName("positionX")[0].textContent - 1.5,
+                    block.getElementsByTagName("positionY")[0].textContent - 1.5,
+                    block.getElementsByTagName("positionZ")[0].textContent - 1.5);
+                brick.add(cube);
+            }
+            numberOfBricks++;
+            board.add(brick);
+            console.log(scene);
+        }
+
+        function colorNodeToHex(color){
+            var R = Math.floor(parseInt(color.getElementsByTagName("R")[0].textContent) * colorChange);
+            var G = Math.floor(parseInt(color.getElementsByTagName("G")[0].textContent) * colorChange);
+            var B = Math.floor(parseInt(color.getElementsByTagName("B")[0].textContent) * colorChange);
+            R = ((R&0x0000ff) << 16);
+            G = ((G&0x0000ff) << 8);
+            B = (B&0x0000ff);
+            var intnumber = (R|G|B);
+            var HTMLcolor = intnumber.toString(16);
+            return HTMLcolor;
+        }
+
+        function onAddCube() {
+            if(numberOfBricks>=12) return;
+            AddingBrick(numberOfBricks);
+        }
+
+        function onDeleteLastCube() {
+            scene.traverse(function(child){
+                var ran = (scene.children[1].children.length-1).toString();
+                if(child.name == ran){
+                    children_to_remove.push(child);
+                }
+            });
+            children_to_remove.forEach(function(child){
+                scene.children[1].remove(child);
+            });
+            if(children_to_remove.length>0){numberOfBricks--;}
+            children_to_remove=[];
+        }
+
+        function onLoadFile(e) {
+            readSingleFile(e);
+            clearScene();
+            addGrid();
+            addEmptyBoard();
+            addLight();
+        }
+
+        function clearScene(){
+            scene.traverse(function(child){
+                    children_to_remove.push(child);
+            });
+            children_to_remove.forEach(function(child){
+                scene.remove(child);
+            });
+            children_to_remove=[];
+            numberOfBricks = 0;
+        }
+
+        function addGrid(){
+            var grid = new THREE.GridHelper( 50, 50, 0xffffff, 0x333333 );
+            scene.add( grid );
+        }
+
+        function addLight(){
+            var light = new THREE.PointLight(0xffffff, 2);
+            light.position.set(-40,-20,20);
+            scene.add(light);
+            var light2 = new THREE.PointLight(0xffffff, 2);
+            light2.position.set(40,20,-20);
+            scene.add(light2);
+            var light3 = new THREE.PointLight(0xffffff, 2);
+            light3.position.set(40,-20,-20);
+            scene.add(light3);
+        }
+
+        function addEmptyBoard(){
+            board = new THREE.Group();
+            board.name = "Board";
+            scene.add(board);
+        }
+
+        function parseXML(){
+            var parser = new DOMParser();
+            xmlDoc = parser.parseFromString(rawXML,"text/xml");
+        }
+
+        function readSingleFile(e) {
+            var file = e.target.files[0];
+            if (!file) {
+                return;
+            }
+            var reader = new FileReader();
+            reader.onload = function(e) {
+            };
+            reader.addEventListener('load', function(e) {
+                rawXML = e.target.result;
+                document.querySelector("#file-contents").textContent = rawXML;
+                parseXML();
+            });
+            reader.readAsText(file);
+        }
+
+        function getRandomArbitrary(min, max) {
+            return Math.random() * (max - min) + min;
+        }
+
+        window.addEventListener('resize', onWindowResize);
+        window.addEventListener('contextmenu', onDeleteLastCube);
+        window.addEventListener('click', onAddCube);
+        window.addEventListener('input', onLoadFile);
+        window.onload = init;
+    </script>
+</head>
+<body>
+<h1></h1>
+<p style="display: none;" id="file-contents"></p>
+<input type="file"
+                id="avatar" name="avatar"
+                accept=".txt">
+</body>
+</html>

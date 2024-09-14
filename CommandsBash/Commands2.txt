@@ -1,0 +1,18 @@
+Console_TetrisCube --Clear datasource=192.168.0.162;port=3306;username=user164;password=user164  SomaCube
+
+Console_TetrisCube --populate datasource=192.168.0.162;port=3306;username=user164;password=user164  SomaCube
+
+Console_TetrisCube --solve 100 datasource=192.168.0.162;port=3306;username=user164;password=user164  SomaCube
+Console_TetrisCube --RemoveDuplicate datasource=192.168.0.162;port=3306;username=user164;password=user164  SomaCube
+
+Console_TetrisCube --SetPositionList 3 C:\Users\dell\source\repos\Console_TetrisCube\Console_TetrisCube\Data\SomaCube.txt
+
+Console_TetrisCube --solve 15 datasource=192.168.0.162;port=3306;username=user164;password=user164  TetrisCube
+Console_TetrisCube --solve 10 datasource=192.168.0.162;port=3306;username=user164;password=user164  TetrisCube
+
+--populate datasource=192.168.0.162;port=3306;username=user164;password=user164  TetrisCube
+Console_TetrisCube --Clear datasource=192.168.0.162;port=3306;username=user164;password=user164  SomaCube
+
+--RemoveDuplicate datasource=192.168.0.162;port=3306;username=user164;password=user164  SomaCube
+
+--fix datasource=192.168.0.162;port=3306;username=user164;password=user164 TetrisCube
